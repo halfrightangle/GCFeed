@@ -1,0 +1,37 @@
+# macOS
+.DS_Store
+
+# 环境变量与密钥
+.env
+.env.*
+!.env.example
+
+# Go 构建产物
+*.exe
+*.exe~
+*.test
+*.out
+/bin/
+apps/api/feed
+apps/api/worker
+
+# 上传的用户文件与运行时数据
+apps/api/uploads/*
+!apps/api/uploads/.gitkeep
+*.log
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
+
+# IDE
+.idea/
+.vscode/
+
+# 测试覆盖率
+coverage/
+*.cover
+
+# AI
+.claude/
