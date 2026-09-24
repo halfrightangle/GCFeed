@@ -18,6 +18,7 @@ func main() {
 	})
 
 	log.Println("server is running on :8080")
+
 	if err := g.Run(":8080"); err != nil {
 		log.Fatalf("run server failed: %v", err)
 	}
