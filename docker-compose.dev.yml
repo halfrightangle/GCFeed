@@ -1,0 +1,120 @@
+name: ${PROJECT_NAME}
+services:
+  mysql:
+    image: ${MYSQL_IMAGE}
+    restart: unless-stopped
+
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+      # 数据库名 = 项目名
+      MYSQL_DATABASE: ${PROJECT_NAME}
+
+      # 用户名 = 项目名_user
+      MYSQL_USER: ${MYSQL_USER}
+
+      # 应用统一密码
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+      TZ: Asia/Shanghai
+
+    ports:
+      - "${HOST_BIND_IP}:${MYSQL_PORT}:3306"
+
+    volumes:
+      - ./data/${PROJECT_NAME}/mysql:/var/lib/mysql
+
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+
+    networks:
+      - dev-network
+        
+  redis:
+    image: ${REDIS_IMAGE}
+    restart: unless-stopped
+
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+      - --save
+      - ""
+      - --requirepass
+      - ${REDIS_PASSWORD}
+      - --maxmemory
+      - 512mb
+      - --maxmemory-policy
+      - noeviction
+
+    ports:
+      - "${HOST_BIND_IP}:${REDIS_PORT}:6379"
+
+    volumes:
+      - ./data/${PROJECT_NAME}/redis:/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "redis-cli -a \"${REDIS_PASSWORD}\" --no-auth-warning ping | grep -q PONG"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+
+    networks:
+      - dev-network
+
+  rabbitmq:
+    image: ${RABBITMQ_IMAGE}
+    restart: unless-stopped
+
+    hostname: rabbitmq
+
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_DEFAULT_VHOST: ${PROJECT_NAME}
+
+    ports:
+      - "${HOST_BIND_IP}:${RABBITMQ_AMQP_PORT}:5672"
+      - "${HOST_BIND_IP}:${RABBITMQ_MANAGEMENT_PORT}:15672"
+
+    volumes:
+      - ./data/${PROJECT_NAME}/rabbitmq:/var/lib/rabbitmq
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "rabbitmq-diagnostics",
+          "-q",
+          "ping"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+    networks:
+      - dev-network
+
+networks:
+  dev-network:
+    driver: bridge

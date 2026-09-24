@@ -35,3 +35,6 @@ coverage/
 
 # AI
 .claude/
+
+# Docker 数据
+data/
